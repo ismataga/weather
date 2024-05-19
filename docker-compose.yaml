@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  app:
+    image: 'weather:latest'
+    build:
+      context: .
+    deploy:
+      mode: replicated
+      replicas: 3
+    ports:
+      - "9596-9598:9999"
+    environment:
+      - "API_KEY:${API_KEY}"
+    networks:
+      - open-weather-network
+
+  prometheus:
+    image: prom/prometheus:v2.35.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+       - /run/desktop/mnt/host/c/Users/Ismat/Desktop/JAVA1/weather/data/prometheus:/etc/prometheus:rw
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - open-weather-network
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana-oss
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_DOMAIN=localhost
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    links:
+      - prometheus
+    networks:
+      - open-weather-network
+
+networks:
+  open-weather-network:
+
